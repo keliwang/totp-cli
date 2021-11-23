@@ -1,7 +1,7 @@
-use std::io::{BufReader, Read};
-use std::fs::File;
-use oath::{totp_raw_now, HashType};
+use google_authenticator::GoogleAuthenticator;
 use serde::Deserialize;
+use std::fs::File;
+use std::io::{BufReader, Read};
 
 #[derive(Debug, Deserialize)]
 struct Config {
@@ -19,9 +19,9 @@ fn main() -> std::io::Result<()> {
     reader.read_to_string(&mut data)?;
 
     let config: Config = toml::from_str(&data)?;
-    let key = base32::decode(base32::Alphabet::RFC4648 { padding: false }, &config.secret).unwrap();
-    let totp_token = totp_raw_now(&key, config.digits, 0, config.period, &HashType::SHA1);
-    print!("{}{}", config.pin, totp_token);
+    let auth = GoogleAuthenticator::new();
+    let code = auth.get_code(&config.secret, 0).unwrap();
+    print!("{}{}", config.pin, code);
 
     Ok(())
 }
